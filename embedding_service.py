@@ -21,12 +21,22 @@ class EmbeddingService:
         
         # Anchors
         self.anchors = [
+            "Design",
             "Engineering",
-            "Product Engineering",
-            "Platform Engineering",
             "Non-Engineering"
+            "Product",
+            "Sales",
         ]
         self.anchor_vecs = self.model.encode(self.anchors, normalize_embeddings=True)
+
+        self.variant_map = {
+            "Product Engineering": "Engineering",
+            "Platform Engineering": "Engineering",
+            "Software Engineering": "Engineering",
+            "Product Manager": "Product",
+            "UX Designer": "Design",
+            "Sales Associate": "Sales"
+        }
         
         # Redis setup
         self._setup_redis()
@@ -65,9 +75,14 @@ class EmbeddingService:
         text = re.sub(r'[^a-z ]+', '', text)  # remove punctuation
         return text.strip()
 
+    def map_category(self, category: str) -> str:
+        logging.info(f"Mapping category: {category}")
+        return self.variant_map.get(self.normalize(category), "Non-Engineering")
+
     def embed_or_cache(self, text: str):
         """Get embedding with Redis or LRU cache"""
         text_norm = self.normalize(text)
+        logging.info(f"Normalized text: {text_norm}")
         if self.use_redis:
             key = f"embed:{text_norm}"
             val = self.r.get(key)
