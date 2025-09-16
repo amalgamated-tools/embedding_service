@@ -29,6 +29,12 @@ class Items(BaseModel):
     texts: List[str]
 
 
+@app.get("/health")
+def health_check():
+    """Health check endpoint for monitoring"""
+    return {"status": "healthy", "service": "embedding-service"}
+
+
 @app.post("/embed")
 def embed(item: Item):
     vec = cached_embed(item.text)
