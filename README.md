@@ -75,3 +75,32 @@ curl -X POST "http://localhost:8000/classify_batch" \
 ## Development
 
 The service uses the `all-MiniLM-L6-v2` model for embeddings and includes caching for performance optimization. See [Copilot Instructions](.copilot-instructions.md) for detailed development guidelines.
+
+## Testing
+
+The project includes comprehensive unit tests with mocking to avoid calling hosted models. Tests run quickly without external dependencies.
+
+### Running Tests Locally
+
+```bash
+# Install test dependencies
+pip install pytest pytest-asyncio httpx
+
+# Run all tests
+pytest test_main.py test_embedding_service.py -v
+
+# Run tests with coverage
+pip install pytest-cov
+pytest test_main.py test_embedding_service.py --cov=. --cov-report=html
+```
+
+### GitHub Actions
+
+Tests are automatically run on every push and pull request via GitHub Actions. The workflow:
+
+- Tests on Python 3.12 and 3.13
+- Uses comprehensive mocking to prevent model downloads
+- Runs offline to avoid external API calls
+- Generates coverage reports
+
+See [TESTING.md](TESTING.md) for detailed testing documentation.
