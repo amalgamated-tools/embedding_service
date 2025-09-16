@@ -1,0 +1,19 @@
+services:
+  embedding_service:
+    build: .
+    container_name: embedding_service
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      EMBEDDING_MODEL: all-mpnet-base-v2
+      SIMILARITY_THRESHOLD: 0.70
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"

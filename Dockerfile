@@ -31,8 +31,12 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Pre-download the model at build time
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
+# Set default model (can be overridden at build time)
+ARG EMBEDDING_MODEL=all-mpnet-base-v2
+ENV EMBEDDING_MODEL=${EMBEDDING_MODEL}
+
+# Pre-download the embedding model at build time
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('${EMBEDDING_MODEL}')"
 
 # Expose port
 EXPOSE 8000
