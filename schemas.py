@@ -8,3 +8,5 @@ class Item(BaseModel):
 
 class Items(BaseModel):
     texts: List[str]
+
+    
