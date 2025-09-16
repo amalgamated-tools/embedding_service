@@ -35,15 +35,21 @@ def classify(item: Item, threshold: float = THRESHOLD_DEFAULT) -> ClassifyRespon
     idx = int(np.argmax(sims))
 
     anchor = embedding_service.anchors[idx]
+    print(anchor)
+    print(sims[idx])
     unmapped_category = anchor if sims[idx] >= threshold else "Unsure"
-    category = embedding_service.map_category(unmapped_category)
 
+    category = embedding_service.map_category(unmapped_category)
+    print(category)
+
+    # make sure the fields are correctly assigned
     return ClassifyResponse(
-        text=item.text,
-        threshold=threshold,
-        category=category,
-        closest_anchor=anchor,
-        category_before_mapping=unmapped_category,
+        # this should always be a string
+        text=item.text if isinstance(item.text, str) else str(item.text),
+        threshold=threshold if isinstance(threshold, float) else float(threshold),
+        category=category if isinstance(category, str) else str(category),
+        closest_anchor=anchor if isinstance(anchor, str) else str(anchor),
+        category_before_mapping=unmapped_category if isinstance(unmapped_category, str) else str(unmapped_category),
         similarity=float(sims[idx])
     )
 

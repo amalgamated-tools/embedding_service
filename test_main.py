@@ -89,6 +89,7 @@ class TestClassifyEndpoint:
             [0.0, 0.0, 0.0, 1.0],  # Non-Engineering
         ])
         mock_embedding_service.anchors = ["Engineering", "Product Engineering", "Platform Engineering", "Non-Engineering"]
+        mock_embedding_service.map_category.return_value = "Engineering"
         
         response = client.post("/classify", json={"text": "Python programming"})
         
@@ -111,6 +112,7 @@ class TestClassifyEndpoint:
             [0.0, 0.0, 0.0, 1.0],  # Non-Engineering
         ])
         mock_embedding_service.anchors = ["Engineering", "Product Engineering", "Platform Engineering", "Non-Engineering"]
+        mock_embedding_service.map_category.return_value = "Engineering"
         
         response = client.post("/classify", json={"text": "Product development"})
         
@@ -133,7 +135,8 @@ class TestClassifyEndpoint:
             [0.0, 0.0, 0.0, 1.0],  # Non-Engineering
         ])
         mock_embedding_service.anchors = ["Engineering", "Product Engineering", "Platform Engineering", "Non-Engineering"]
-        
+        mock_embedding_service.map_category.return_value = "Engineering"
+
         response = client.post("/classify", json={"text": "Infrastructure setup"})
         
         assert response.status_code == 200
@@ -155,6 +158,7 @@ class TestClassifyEndpoint:
             [0.0, 0.0, 0.0, 1.0],  # Non-Engineering - this should match
         ])
         mock_embedding_service.anchors = ["Engineering", "Product Engineering", "Platform Engineering", "Non-Engineering"]
+        mock_embedding_service.map_category.return_value = "Non-Engineering"
         
         response = client.post("/classify", json={"text": "Marketing strategy"})
         
@@ -177,6 +181,7 @@ class TestClassifyEndpoint:
             [1.0, 1.0, 1.0, 1.0],  # Non-Engineering
         ])
         mock_embedding_service.anchors = ["Engineering", "Product Engineering", "Platform Engineering", "Non-Engineering"]
+        mock_embedding_service.map_category.return_value = "Unsure"
         
         response = client.post("/classify", json={"text": "ambiguous text"})
         
@@ -198,6 +203,7 @@ class TestClassifyEndpoint:
             [0.0, 0.0, 0.0, 1.0],  # Non-Engineering
         ])
         mock_embedding_service.anchors = ["Engineering", "Product Engineering", "Platform Engineering", "Non-Engineering"]
+        mock_embedding_service.map_category.return_value = "Engineering"
         
         # With threshold 0.3, should classify as Engineering
         response = client.post("/classify?threshold=0.3", json={"text": "coding"})
@@ -228,6 +234,7 @@ class TestClassifyBatchEndpoint:
             [0.0, 0.0, 0.0, 1.0],  # Non-Engineering
         ])
         mock_embedding_service.anchors = ["Engineering", "Product Engineering", "Platform Engineering", "Non-Engineering"]
+        mock_embedding_service.map_category.side_effect = ["Engineering", "Non-Engineering"]
         
         texts = ["Python programming", "Marketing strategy"]
         response = client.post("/classify_batch", json={"texts": texts})
@@ -275,6 +282,7 @@ class TestClassifyBatchEndpoint:
             [0.0, 0.0, 0.0, 1.0],  # Non-Engineering
         ])
         mock_embedding_service.anchors = ["Engineering", "Product Engineering", "Platform Engineering", "Non-Engineering"]
+        mock_embedding_service.map_category.return_value = "Unsure"
         
         # With threshold 0.5, should return Unsure
         response = client.post("/classify_batch?threshold=0.5", json={"texts": ["ambiguous text"]})
