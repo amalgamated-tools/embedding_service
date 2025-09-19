@@ -71,7 +71,7 @@ class TestEmbeddingServiceWithMocks:
         
         # Verify initialization
         assert service.use_redis is True
-        assert len(service.anchors) == 20
+        assert len(service.anchors) == 40
         
         # Test Redis cache miss - mock the encode call for embedding
         embedding_result = np.array([0.9, 0.8])
