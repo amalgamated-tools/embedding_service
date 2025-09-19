@@ -77,7 +77,7 @@ class EmbeddingService:
 
     def map_category(self, category: str) -> str:
         logging.info(f"Mapping category: {category}")
-        return self.variant_map.get(self.normalize(category), "Non-Engineering")
+        return self.variant_map.get(self.normalize(category), category)
 
     def embed_or_cache(self, text: str):
         """Get embedding with Redis or LRU cache"""
