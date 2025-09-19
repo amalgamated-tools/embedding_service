@@ -298,9 +298,9 @@ class EmbeddingService:
         return text.strip()
 
     def map_category(self, category: str) -> str:
-        logging.info(f"Mapping category: {category}")
         # Return the mapped category, or the original category if no mapping exists
         # This allows anchor categories to pass through unchanged while mapping specific job titles
+        logging.info(f"Mapping category: {category}")
         return self.variant_map.get(self.normalize(category), category)
 
     def embed_or_cache(self, text: str):
