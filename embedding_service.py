@@ -22,25 +22,46 @@ class EmbeddingService:
         # Anchors - Major department categories
         self.anchors = [
             "Software Engineering",
-            "Data & AI",
-            "Hardware / Embedded",
+            "Data Engineering",
+            "Data Science",
+            "Machine Learning",
+            "Commercial Finance",
+            "AI",
+            "Hardware",
+            "Embedded Software",
             "Product Management",
-            "Product / UX Design",
-            "UI / Visual Design", 
-            "UX Research",
-            "Content / UX Writing",
+            "Product Design",
+            "UX Design",
+            "UI",
+            "UX",
+            "Visual Design", 
+            "Research",
+            "Content Writing",
             "Sales",
             "Marketing",
-            "Customer Success / Support",
-            "Community & Developer Relations",
-            "People / HR / Recruiting / Talent",
-            "Finance & Accounting",
-            "Legal & Compliance",
-            "Operations / Strategy / BizOps",
-            "Facilities / Workplace Experience",
-            "Corporate IT / Helpdesk",
-            "Security & Privacy",
+            "Customer Success",
+            "Support",
+            "Developer Relations",
+            "People",
+            "HR",
+            "Recruiting"
+            "Talent",
+            "Finance",
+            "Accounting",
+            "Legal and Compliance",
+            "Operations",
+            "Strategy",
+            "BizOps",
+            "Facilities",
+            "Workplace Experience",
+            "Corporate IT",
+            "Helpdesk",
+            "Security",
+            "Privacy",
             "Executive roles",
+            "Corporate Development",
+            "Strategy and Operations",
+            "Culture"
         ]
         self.anchor_vecs = self.model.encode(self.anchors, normalize_embeddings=True)
 
@@ -178,6 +199,7 @@ class EmbeddingService:
             
             # Finance & Accounting mappings
             "finance": "Finance & Accounting",
+            "commercial finance": "Finance & Accounting",
             "accounting": "Finance & Accounting",
             "financial analyst": "Finance & Accounting",
             "accountant": "Finance & Accounting",
@@ -198,6 +220,7 @@ class EmbeddingService:
             
             # Operations / Strategy / BizOps mappings
             "operations": "Operations / Strategy / BizOps",
+            "ops": "Operations / Strategy / BizOps",
             "strategy": "Operations / Strategy / BizOps", 
             "bizops": "Operations / Strategy / BizOps",
             "business operations": "Operations / Strategy / BizOps",
@@ -300,8 +323,11 @@ class EmbeddingService:
     def map_category(self, category: str) -> str:
         # Return the mapped category, or the original category if no mapping exists
         # This allows anchor categories to pass through unchanged while mapping specific job titles
-        logging.info(f"Mapping category: {category}")
-        return self.variant_map.get(self.normalize(category), category)
+        category = self.normalize(category)
+        mapped = self.variant_map.get(category, category)
+        if category != mapped:
+            logging.info(f"Mapped category: {mapped}")
+        return mapped
 
     def embed_or_cache(self, text: str):
         """Get embedding with Redis or LRU cache"""
