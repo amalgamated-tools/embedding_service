@@ -71,7 +71,7 @@ class TestEmbeddingServiceWithMocks:
         
         # Verify initialization
         assert service.use_redis is True
-        assert len(service.anchors) == 4
+        assert len(service.anchors) == 20
         
         # Test Redis cache miss - mock the encode call for embedding
         embedding_result = np.array([0.9, 0.8])
@@ -117,7 +117,9 @@ class TestEmbeddingServiceWithMocks:
         """Test fallback to LRU cache when Redis connection fails."""
         # Mock the sentence transformer
         mock_model = Mock()
-        mock_model.encode.return_value = np.array([[0.1, 0.2], [0.3, 0.4], [0.5, 0.6], [0.7, 0.8]])
+        # When encode is called with a list, return array with the embedding as first element
+        embedding_result = np.array([0.9, 0.8])
+        mock_model.encode.return_value = np.array([embedding_result])  # Wrap in array to match [text_norm] call
         mock_st.return_value = mock_model
         
         # Mock Redis connection failure
