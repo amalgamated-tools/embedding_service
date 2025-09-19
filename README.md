@@ -83,15 +83,16 @@ The project includes comprehensive unit tests with mocking to avoid calling host
 ### Running Tests Locally
 
 ```bash
-# Install test dependencies
-pip install pytest pytest-asyncio httpx
+# Using uv (recommended)
+uv sync --all-extras  # Install all dependencies including dev
+uv run pytest test_main.py test_embedding_service.py -v
 
-# Run all tests
+# Using pip (alternative)
+pip install pytest pytest-asyncio httpx pytest-cov
 pytest test_main.py test_embedding_service.py -v
 
 # Run tests with coverage
-pip install pytest-cov
-pytest test_main.py test_embedding_service.py --cov=. --cov-report=html
+uv run pytest test_main.py test_embedding_service.py --cov=. --cov-report=html
 ```
 
 ### GitHub Actions

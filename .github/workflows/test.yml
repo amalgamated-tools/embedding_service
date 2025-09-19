@@ -13,43 +13,26 @@ jobs:
     
     strategy:
       matrix:
-        python-version: ["3.12"]  # Use 3.12 as primary, since 3.13 might not be available on all runners
-        include:
-          - python-version: "3.13"
-            allow-failure: true  # Allow 3.13 to fail if not available
+        python-version: ["3.13", "3.12"]
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        allow-prereleases: true
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
     
-    - name: Cache pip dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}-${{ matrix.python-version }}
-        restore-keys: |
-          ${{ runner.os }}-pip-${{ matrix.python-version }}-
-          ${{ runner.os }}-pip-
+    - name: Set up Python ${{ matrix.python-version }}
+      run: uv python install ${{ matrix.python-version }}
     
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        # Install main dependencies
-        pip install fastapi>=0.116.1 numpy>=2.3.3 redis>=6.4.0 uvicorn>=0.35.0
-        # Install sentence-transformers for mocking (required for @patch decorators)
-        pip install sentence-transformers>=5.1.0
-        # Install test dependencies
-        pip install pytest>=8.0.0 pytest-asyncio>=0.21.0 httpx>=0.24.0
+        # Install project dependencies including dev dependencies for testing
+        uv sync --all-extras
     
     - name: Run tests
       run: |
-        python -m pytest test_main.py test_embedding_service.py -v --tb=short
+        uv run pytest test_main.py test_embedding_service.py -v --tb=short
       env:
         # Prevent model downloads during testing
         HF_HUB_OFFLINE: 1
@@ -59,10 +42,9 @@ jobs:
         SIMILARITY_THRESHOLD: 0.70
     
     - name: Generate coverage report
-      if: matrix.python-version == '3.12'  # Only generate coverage for one Python version
+      if: matrix.python-version == '3.13'  # Only generate coverage for primary Python version
       run: |
-        pip install pytest-cov
-        python -m pytest test_main.py test_embedding_service.py --cov=. --cov-report=term-missing --cov-report=xml
+        uv run pytest test_main.py test_embedding_service.py --cov=. --cov-report=term-missing --cov-report=xml
       env:
         HF_HUB_OFFLINE: 1
         TRANSFORMERS_OFFLINE: 1
@@ -70,7 +52,7 @@ jobs:
         SIMILARITY_THRESHOLD: 0.70
     
     - name: Upload coverage to Codecov
-      if: matrix.python-version == '3.12' && success()
+      if: matrix.python-version == '3.13' && success()
       uses: codecov/codecov-action@v3
       with:
         file: ./coverage.xml
