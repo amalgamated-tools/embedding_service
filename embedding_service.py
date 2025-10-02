@@ -1,12 +1,15 @@
 import os
-import re
+import helpers
 import logging
-from sentence_transformers import SentenceTransformer
-import numpy as np
-import redis
+from categories import Categories
+from schemas import ClassifyResponse
+from sentence_transformers import SentenceTransformer # type: ignore
+import numpy as np # type: ignore
+import redis # type: ignore
 import json
 from functools import lru_cache
 
+logging.basicConfig(level=logging.DEBUG)
 
 class EmbeddingService:
     def __init__(self):
@@ -18,270 +21,185 @@ class EmbeddingService:
         # Load model
         logging.info(f"Loading embedding model: {self.model_name}")
         self.model = SentenceTransformer(self.model_name)
+
+        self.categories = Categories()
         
         # Anchors - Major department categories
         self.anchors = [
-            "Software Engineering",
-            "Data Engineering",
-            "Data Science",
-            "Machine Learning",
-            "Commercial Finance",
-            "AI",
-            "Hardware",
-            "Embedded Software",
-            "Product Management",
-            "Product Design",
-            "UX Design",
-            "UI",
-            "UX",
-            "Visual Design", 
-            "Research",
-            "Content Writing",
-            "Sales",
-            "Marketing",
-            "Customer Success",
-            "Support",
-            "Developer Relations",
-            "People",
-            "HR",
-            "Recruiting"
-            "Talent",
-            "Finance",
-            "Accounting",
-            "Legal and Compliance",
-            "Operations",
-            "Strategy",
-            "BizOps",
-            "Facilities",
-            "Workplace Experience",
-            "Corporate IT",
-            "Helpdesk",
-            "Security",
-            "Privacy",
-            "Executive roles",
-            "Corporate Development",
-            "Strategy and Operations",
-            "Culture"
+            "account executive",
+            "account manager",
+            "agent engineering",
+            "agentic platform",
+            "agents",
+            "ai engineer",
+            "ai researcher",
+            "ai",
+            "ai/ml",
+            "analytics",
+            "applied ai infrastructure",
+            "backend developer",
+            "backend engineering",
+            "backend", 
+            "brand manager",
+            "brand",
+            "business development manager",
+            "business development",
+            "business",
+            "client success",
+            "client",
+            "commercial",
+            "community manager",
+            "community relations",
+            "community",
+            "company",
+            "content designer",
+            "content marketing manager",
+            "content marketing",
+            "content strategist",
+            "copywriter",
+            "corporate it",
+            "customer experience",
+            "customer success manager",
+            "customer success",
+            "customer support",
+            "cybersecurity",
+            "data analyst",
+            "data engineer",
+            "data engineering",
+            "data science",
+            "data scientist",
+            "data",
+            "design researcher",
+            "design",
+            "desktop support",
+            "developer advocate", 
+            "developer evangelist",
+            "developer relations",
+            "development",
+            "devops engineer",
+            "devops",
+            "digital marketing",
+            "ecosystem",
+            "education",
+            "electrical engineer",
+            "electrical",
+            "embedded engineer",
+            "embeddings",
+            "engineering",
+            "enterprise",
+            "executive",
+            "facilities",
+            "field",
+            "finance",
+            "firmware engineer",
+            "firmware",
+            "forward",
+            "frontend developer",
+            "frontend engineering",
+            "frontend",
+            "full stack developer",
+            "full stack engineering",
+            "full-stack",
+            "fullstack",
+            "gotomarket",
+            "graphic designer",
+            "grc",
+            "growth manager",
+            "growth",
+            "gtm",
+            "hardware engineer",
+            "hardware",
+            "helpdesk",
+            "human resources",
+            "incident response",
+            "inference",
+            "information security",
+            "infosec",
+            "infrastructure engineer",
+            "infrastructure",
+            "interaction designer",
+            "it manager",
+            "it operations",
+            "it support",
+            "large language model",
+            "large language models",
+            "legal",
+            "llm",
+            "machine learning engineer",
+            "machine learning team",
+            "machine learning",
+            "marketing manager",
+            "marketing specialist",
+            "marketing",
+            "mechanical engineer",
+            "mechanical", 
+            "ml engineer",
+            "ml",
+            "mobile developer",
+            "mobile",
+            "model training",
+            "onboarding", 
+            "operations",
+            "people",
+            "performance marketing",
+            "performance",
+            "platform engineer",
+            "pm",
+            "principal product manager",
+            "privacy",
+            "product designer",
+            "product engineering",
+            "product management",
+            "product manager",
+            "product marketing manager",
+            "product marketing",
+            "product owner",
+            "program manager",
+            "qa engineer",
+            "qa",
+            "qa/test",
+            "research scientist",
+            "research",
+            "robotics engineer",
+            "robotics",
+            "sales associate",
+            "sales engineer",
+            "sales manager",
+            "sales representative",
+            "sales",
+            "security analyst",
+            "security engineer",
+            "security engineering",
+            "security operations",
+            "security",
+            "senior product manager",
+            "site reliability",
+            "software development",
+            "software engineer",
+            "software engineering",
+            "solutions engineer",
+            "sre",
+            "support engineer",
+            "support engineering",
+            "system administrator",
+            "talent",
+            "technical account manager",
+            "technical account mgmt",
+            "technical pm",
+            "technical product manager",
+            "technical support",
+            "technical writer",
+            "technology",
+            "test engineer",
+            "ui designer",
+            "user experience",                     
+            "user researcher",
+            "ux designer",
+            "ux researcher",
+            "ux writer",
+            "visual designer",
         ]
         self.anchor_vecs = self.model.encode(self.anchors, normalize_embeddings=True)
-
-        self.variant_map = {
-            # Software Engineering mappings
-            "frontend": "Software Engineering",
-            "backend": "Software Engineering", 
-            "full-stack": "Software Engineering",
-            "mobile": "Software Engineering",
-            "infrastructure": "Software Engineering",
-            "security": "Software Engineering",
-            "qa/test": "Software Engineering",
-            "devops": "Software Engineering",
-            "sre": "Software Engineering",
-            "site reliability": "Software Engineering",
-            "software engineer": "Software Engineering",
-            "frontend developer": "Software Engineering",
-            "backend developer": "Software Engineering",
-            "full stack developer": "Software Engineering",
-            "mobile developer": "Software Engineering",
-            "infrastructure engineer": "Software Engineering",
-            "security engineer": "Software Engineering",
-            "qa engineer": "Software Engineering",
-            "test engineer": "Software Engineering",
-            "devops engineer": "Software Engineering",
-            "platform engineer": "Software Engineering",
-            "software development": "Software Engineering",
-            
-            # Data & AI mappings
-            "data engineering": "Data & AI",
-            "data science": "Data & AI",
-            "machine learning": "Data & AI",
-            "analytics": "Data & AI",
-            "research": "Data & AI",
-            "data engineer": "Data & AI",
-            "data scientist": "Data & AI",
-            "ml engineer": "Data & AI",
-            "machine learning engineer": "Data & AI",
-            "ai engineer": "Data & AI",
-            "data analyst": "Data & AI",
-            "research scientist": "Data & AI",
-            "ai researcher": "Data & AI",
-            
-            # Hardware / Embedded mappings
-            "electrical": "Hardware / Embedded",
-            "mechanical": "Hardware / Embedded", 
-            "firmware": "Hardware / Embedded",
-            "robotics": "Hardware / Embedded",
-            "electrical engineer": "Hardware / Embedded",
-            "mechanical engineer": "Hardware / Embedded",
-            "firmware engineer": "Hardware / Embedded",
-            "embedded engineer": "Hardware / Embedded",
-            "robotics engineer": "Hardware / Embedded",
-            "hardware engineer": "Hardware / Embedded",
-            
-            # Product Management mappings
-            "technical pm": "Product Management",
-            "program manager": "Product Management",
-            "product owner": "Product Management",
-            "product manager": "Product Management",
-            "technical product manager": "Product Management",
-            "senior product manager": "Product Management",
-            "principal product manager": "Product Management",
-            
-            # Design mappings
-            "ux designer": "Product / UX Design",
-            "product designer": "Product / UX Design",
-            "interaction designer": "Product / UX Design",
-            "ui designer": "UI / Visual Design",
-            "visual designer": "UI / Visual Design",
-            "graphic designer": "UI / Visual Design",
-            "ux researcher": "UX Research",
-            "user researcher": "UX Research",
-            "design researcher": "UX Research",
-            "content designer": "Content / UX Writing",
-            "ux writer": "Content / UX Writing",
-            "content strategist": "Content / UX Writing",
-            "technical writer": "Content / UX Writing",
-            
-            # Sales mappings
-            "account executive": "Sales",
-            "business development": "Sales",
-            "solutions engineer": "Sales",
-            "sales engineer": "Sales",
-            "account manager": "Sales",
-            "business development manager": "Sales",
-            "sales representative": "Sales",
-            "sales manager": "Sales",
-            
-            # Marketing mappings
-            "growth": "Marketing",
-            "brand": "Marketing",
-            "performance": "Marketing",
-            "product marketing": "Marketing",
-            "content marketing": "Marketing",
-            "growth manager": "Marketing",
-            "brand manager": "Marketing",
-            "performance marketing": "Marketing",
-            "product marketing manager": "Marketing",
-            "content marketing manager": "Marketing",
-            "marketing manager": "Marketing",
-            "digital marketing": "Marketing",
-            "marketing specialist": "Marketing",
-            
-            # Customer Success / Support mappings
-            "support engineering": "Customer Success / Support",
-            "onboarding": "Customer Success / Support", 
-            "technical account mgmt": "Customer Success / Support",
-            "customer success": "Customer Success / Support",
-            "customer support": "Customer Success / Support",
-            "support engineer": "Customer Success / Support",
-            "customer success manager": "Customer Success / Support",
-            "technical account manager": "Customer Success / Support",
-            "customer experience": "Customer Success / Support",
-            "client success": "Customer Success / Support",
-            
-            # Community & Developer Relations mappings
-            "developer relations": "Community & Developer Relations",
-            "developer advocate": "Community & Developer Relations", 
-            "community manager": "Community & Developer Relations",
-            "developer evangelist": "Community & Developer Relations",
-            "community relations": "Community & Developer Relations",
-            
-            # People / HR / Recruiting / Talent mappings
-            "people": "People / HR / Recruiting / Talent",
-            "hr": "People / HR / Recruiting / Talent",
-            "recruiting": "People / HR / Recruiting / Talent",
-            "talent": "People / HR / Recruiting / Talent",
-            "human resources": "People / HR / Recruiting / Talent",
-            "recruiter": "People / HR / Recruiting / Talent",
-            "talent acquisition": "People / HR / Recruiting / Talent",
-            "hr manager": "People / HR / Recruiting / Talent",
-            "people operations": "People / HR / Recruiting / Talent",
-            "talent manager": "People / HR / Recruiting / Talent",
-            
-            # Finance & Accounting mappings
-            "finance": "Finance & Accounting",
-            "commercial finance": "Finance & Accounting",
-            "accounting": "Finance & Accounting",
-            "financial analyst": "Finance & Accounting",
-            "accountant": "Finance & Accounting",
-            "finance manager": "Finance & Accounting",
-            "controller": "Finance & Accounting",
-            "treasury": "Finance & Accounting",
-            "financial planning": "Finance & Accounting",
-            
-            # Legal & Compliance mappings
-            "legal": "Legal & Compliance",
-            "compliance": "Legal & Compliance",
-            "lawyer": "Legal & Compliance",
-            "attorney": "Legal & Compliance",
-            "legal counsel": "Legal & Compliance",
-            "compliance manager": "Legal & Compliance",
-            "regulatory affairs": "Legal & Compliance",
-            "legal operations": "Legal & Compliance",
-            
-            # Operations / Strategy / BizOps mappings
-            "operations": "Operations / Strategy / BizOps",
-            "ops": "Operations / Strategy / BizOps",
-            "strategy": "Operations / Strategy / BizOps", 
-            "bizops": "Operations / Strategy / BizOps",
-            "business operations": "Operations / Strategy / BizOps",
-            "operations manager": "Operations / Strategy / BizOps",
-            "strategy manager": "Operations / Strategy / BizOps",
-            "business analyst": "Operations / Strategy / BizOps",
-            "program operations": "Operations / Strategy / BizOps",
-            
-            # Facilities / Workplace Experience mappings
-            "facilities": "Facilities / Workplace Experience",
-            "workplace experience": "Facilities / Workplace Experience",
-            "office manager": "Facilities / Workplace Experience",
-            "facilities manager": "Facilities / Workplace Experience",
-            "workplace operations": "Facilities / Workplace Experience",
-            "office operations": "Facilities / Workplace Experience",
-            
-            # Corporate IT / Helpdesk mappings
-            "corporate it": "Corporate IT / Helpdesk",
-            "helpdesk": "Corporate IT / Helpdesk",
-            "it support": "Corporate IT / Helpdesk",
-            "it manager": "Corporate IT / Helpdesk",
-            "system administrator": "Corporate IT / Helpdesk",
-            "it operations": "Corporate IT / Helpdesk",
-            "desktop support": "Corporate IT / Helpdesk",
-            
-            # Security & Privacy mappings
-            "security engineering": "Security & Privacy",
-            "grc": "Security & Privacy",
-            "incident response": "Security & Privacy",
-            "security analyst": "Security & Privacy",
-            "privacy": "Security & Privacy",
-            "cybersecurity": "Security & Privacy",
-            "information security": "Security & Privacy",
-            "security operations": "Security & Privacy",
-            
-            # Executive roles mappings
-            "ceo": "Executive roles",
-            "cto": "Executive roles",
-            "vp eng": "Executive roles",
-            "cpo": "Executive roles",
-            "cmo": "Executive roles",
-            "chief executive officer": "Executive roles",
-            "chief technology officer": "Executive roles",
-            "chief product officer": "Executive roles",
-            "chief marketing officer": "Executive roles",
-            "vp": "Executive roles",
-            "vice president": "Executive roles",
-            "director": "Executive roles",
-            "head of": "Executive roles",
-            "founder": "Executive roles",
-            "co-founder": "Executive roles",
-            "president": "Executive roles",
-            
-            # Legacy mappings for backward compatibility
-            "Product Engineering": "Software Engineering",
-            "Platform Engineering": "Software Engineering",
-            "Software Engineering": "Software Engineering",
-            "Product Manager": "Product Management",
-            "UX Designer": "Product / UX Design",
-            "Sales Associate": "Sales"
-        }
         
         # Redis setup
         self._setup_redis()
@@ -313,26 +231,23 @@ class EmbeddingService:
             logging.info(f"Cache MISS (LRU): {text}")
         return vec
 
-    def normalize(self, text: str) -> str:
-        """Normalize text for consistent embedding"""
-        text = text.lower()
-        text = re.sub(r'\d+', '', text)  # remove numbers
-        text = re.sub(r'[^a-z ]+', '', text)  # remove punctuation
-        return text.strip()
+    def check_anchor_match(self, text: str) -> str | None:
+        """Check for direct string matches in the anchor list"""
+        logging.info(f"Checking anchor match for: {text}")
 
-    def map_category(self, category: str) -> str:
-        # Return the mapped category, or the original category if no mapping exists
-        # This allows anchor categories to pass through unchanged while mapping specific job titles
-        category = self.normalize(category)
-        mapped = self.variant_map.get(category, category)
-        if category != mapped:
-            logging.info(f"Mapped category: {mapped}")
-        return mapped
+        for key in self.anchors:
+            if key.lower() == text.lower():
+                logging.info(f"Anchor match found: {key} in '{text}'")
+                return key
+
+        logging.info(f"No anchor match found for '{text}'")
+        return None
 
     def embed_or_cache(self, text: str):
         """Get embedding with Redis or LRU cache"""
-        text_norm = self.normalize(text)
+        text_norm = helpers.normalize(text)
         logging.info(f"Normalized text: {text_norm}")
+        
         if self.use_redis:
             key = f"embed:{text_norm}"
             val = self.r.get(key)
@@ -345,6 +260,67 @@ class EmbeddingService:
             return vec
         else:
             return self.cached_embed_lru(text_norm)
+        
+    def classify_batch(self, texts: list[str], threshold: float) -> list[ClassifyResponse]:
+        results = []
+        for text in texts:
+            results.append(self.classify(text, threshold))
+        return results
+
+    def classify(self, text: str, threshold: float = 0.25) -> ClassifyResponse:
+        logging.info(f"Classifying text: {text}")
+        
+        # check for direct anchor match first
+        direct_match = self.check_anchor_match(text)
+        if direct_match:
+            mapped_category = self.categories.map_category(direct_match)
+            logging.info(f"Direct match found: {direct_match} mapped to {mapped_category}")
+
+            return ClassifyResponse(
+                category_before_mapping=direct_match,
+                mapped_category=mapped_category,
+                classify_method="direct_match",
+                similarity=1.0,
+                input_text=text,
+            )
+
+        # check for literal string match in categories
+        literal_match = self.categories.check_variant_match(text)
+        if literal_match:
+            mapped_category = self.categories.map_category(literal_match)
+            logging.info(f"Literal match found: {literal_match} mapped to {mapped_category}")
+
+            return ClassifyResponse(
+                category_before_mapping=literal_match,
+                mapped_category=mapped_category,
+                classify_method="literal_match",
+                similarity=1.0,
+                input_text=text,
+            )
+
+        # no direct match, proceed with embedding-based classification
+        text_vec = self.embed_or_cache(text)
+        sims = np.dot(self.anchor_vecs, text_vec)
+
+        best_idx = np.argmax(sims)
+        best_sim = sims[best_idx]
+        best_anchor = self.anchors[best_idx]
+        mapped_category = self.categories.map_category(best_anchor)
+
+        logging.info(f"Best anchor: {best_anchor} with similarity {best_sim} mapped to {mapped_category}")
+
+        if best_sim < threshold:
+            logging.info(f"Similarity {best_sim} below threshold {threshold}. Assigning 'Other'.")
+            mapped_category = "unsure"
+
+        return ClassifyResponse(
+            mapped_category=mapped_category,
+            category_before_mapping=best_anchor,
+            closest_anchor=best_anchor,
+            classify_method="embedding",
+            similarity=float(best_sim),
+            input_text=text,
+        )
 
 
 # Global instance

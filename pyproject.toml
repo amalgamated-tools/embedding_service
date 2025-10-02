@@ -9,6 +9,7 @@ dependencies = [
     "httptools>=0.6.4",
     "httpx>=0.28.1",
     "numpy>=2.3.3",
+    "pytest>=8.4.2",
     "redis>=6.4.0",
     "sentence-transformers>=5.1.0",
     "uvicorn>=0.35.0",

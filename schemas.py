@@ -1,10 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel # type: ignore
 from typing import List
-
-
 class Item(BaseModel):
     text: str
-
 
 class Items(BaseModel):
     texts: List[str]
@@ -15,28 +12,17 @@ class HealthResponse(BaseModel):
     status: str
     service: str
 
-
 class EmbedResponse(BaseModel):
     embedding: List[float]
-
-
+    
 class ClassifyResponse(BaseModel):
-    text: str
-    threshold: float
-    category: str
-    closest_anchor: str
     category_before_mapping: str
+    mapped_category: str
+    # this can be None if the classify method is not embedding based
+    closest_anchor: str | None = None
+    classify_method: str
     similarity: float
-
-
-class ClassifyBatchItem(BaseModel):
-    text: str
-    threshold: float
-    category: str
-    closest_anchor: str
-    category_before_mapping: str
-    similarity: float
-
+    input_text: str
 
 class ClassifyBatchResponse(BaseModel):
-    results: List[ClassifyBatchItem]
+    results: List[ClassifyResponse]

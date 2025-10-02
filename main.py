@@ -1,9 +1,7 @@
 import os
 import logging
-from venv import logger
 from fastapi import FastAPI
-import numpy as np
-import uvicorn
+import uvicorn # type: ignore
 from schemas import Item, Items, HealthResponse, EmbedResponse, ClassifyResponse, ClassifyBatchResponse
 from embedding_service import embedding_service
 
@@ -30,50 +28,12 @@ def embed(item: Item) -> EmbedResponse:
 @app.post("/classify", response_model=ClassifyResponse)
 def classify(item: Item, threshold: float = THRESHOLD_DEFAULT) -> ClassifyResponse:
     logging.info(f"Classifying item with text '{item.text}' and threshold {threshold}")
-    vec = embedding_service.embed_or_cache(item.text)
-    sims = np.dot(embedding_service.anchor_vecs, vec)
-    idx = int(np.argmax(sims))
-
-    anchor = embedding_service.anchors[idx]
-    print(anchor)
-    print(sims[idx])
-    unmapped_category = anchor if sims[idx] >= threshold else "Unsure"
-
-    category = embedding_service.map_category(unmapped_category)
-    print(category)
-
-    # make sure the fields are correctly assigned
-    return ClassifyResponse(
-        # this should always be a string
-        text=item.text if isinstance(item.text, str) else str(item.text),
-        threshold=threshold if isinstance(threshold, float) else float(threshold),
-        category=category if isinstance(category, str) else str(category),
-        closest_anchor=anchor if isinstance(anchor, str) else str(anchor),
-        category_before_mapping=unmapped_category if isinstance(unmapped_category, str) else str(unmapped_category),
-        similarity=float(sims[idx])
-    )
+    return embedding_service.classify(item.text, threshold)
 
 @app.post("/classify_batch", response_model=ClassifyBatchResponse)
 def classify_batch(items: Items, threshold: float = THRESHOLD_DEFAULT) -> ClassifyBatchResponse:
     logging.info(f"Classifying batch of {len(items.texts)} items with threshold {threshold}")
-    results = []
-    for text in items.texts:
-        vec = embedding_service.embed_or_cache(text)
-        sims = np.dot(embedding_service.anchor_vecs, vec)
-        idx = int(np.argmax(sims))
-        
-        anchor = embedding_service.anchors[idx]
-        unmapped_category = anchor if sims[idx] >= threshold else "Unsure"
-        category = embedding_service.map_category(unmapped_category)
-        
-        results.append({
-            "text": text,
-            "threshold": threshold,
-            "category": category,
-            "closest_anchor": anchor,
-            "category_before_mapping": unmapped_category,
-            "similarity": float(sims[idx])
-        })
+    results = embedding_service.classify_batch(items.texts, threshold)
     return ClassifyBatchResponse(results=results)
 
 # ---------------------- Main ----------------------
