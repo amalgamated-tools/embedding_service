@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.DEBUG)
 app = FastAPI()
 
 # ---------------------- Config ----------------------
-THRESHOLD_DEFAULT = float(os.getenv("SIMILARITY_THRESHOLD", 0.64))
+THRESHOLD_DEFAULT = float(os.getenv("SIMILARITY_THRESHOLD", 0.60))
 
 # ---------------------- Endpoints ----------------------
 @app.get("/health", response_model=HealthResponse)

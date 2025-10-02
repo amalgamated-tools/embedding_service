@@ -26,6 +26,7 @@ class EmbeddingService:
         
         # Anchors - Major department categories
         self.anchors = [
+            "account director",
             "account executive",
             "account manager",
             "agent engineering",
