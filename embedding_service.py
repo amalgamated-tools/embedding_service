@@ -239,7 +239,7 @@ class EmbeddingService:
         for key in self.anchors:
             if key.lower() == text.lower():
                 logging.info(f"Anchor match found: {key} in '{text}'")
-                return key
+                return text
 
         logging.info(f"No anchor match found for '{text}'")
         return None
@@ -311,7 +311,7 @@ class EmbeddingService:
         logging.info(f"Best anchor: {best_anchor} with similarity {best_sim} mapped to {mapped_category}")
 
         if best_sim < threshold:
-            logging.info(f"Similarity {best_sim} below threshold {threshold}. Assigning 'Other'.")
+            logging.info(f"Similarity {best_sim} below threshold {threshold}. Assigning 'unsure'.")
             mapped_category = "unsure"
 
         return ClassifyResponse(

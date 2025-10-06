@@ -165,6 +165,7 @@ class Categories:
             "backend engineering": "Software Engineering",
             "devops engineer": "Software Engineering",
             "devops": "Software Engineering",
+            "engineering": "Software Engineering",
             "frontend developer": "Software Engineering",
             "frontend": "Software Engineering",
             "full stack developer": "Software Engineering",
@@ -195,7 +196,7 @@ class Categories:
         logging.info(f"Mapping category for: {category}")
         category =  helpers.normalize(category)
         logging.info(f"Normalized category: {category}")
-        mapped = self.variant_map.get(category, category)
+        mapped = self.variant_map.get(category, "unsure")
         logging.info(f"Mapped category: {mapped}")
 
         return mapped        
@@ -211,5 +212,5 @@ class Categories:
                 logging.info(f"Literal string match found in variant map: {key} in '{text_norm}' with '{self.variant_map[key]}'")
                 return self.variant_map[key]
 
-        logging.info(f"No direct match found for '{text}' in variant map")
+        
         return None        
