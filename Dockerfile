@@ -2,7 +2,7 @@
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 # Install system dependencies for sentence-transformers
-# RUN apt-get update && apt-get install -y git wget && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y build-essential git wget && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
