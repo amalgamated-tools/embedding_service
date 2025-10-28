@@ -1,9 +1,11 @@
 import os
 import logging
+from urllib import response
 from fastapi import FastAPI
 import uvicorn # type: ignore
-from schemas import Item, Items, HealthResponse, EmbedResponse, ClassifyResponse, ClassifyBatchResponse
+from schemas import Item, Items, HealthResponse, EmbedResponse, ClassifyResponse, ClassifyBatchResponse, CompensationResponse
 from embedding_service import embedding_service
+from compensation_parser import CompensationParser
 
 # ---------------------- Logging ----------------------
 logging.basicConfig(level=logging.DEBUG)
@@ -35,6 +37,18 @@ def classify_batch(items: Items, threshold: float = THRESHOLD_DEFAULT) -> Classi
     logging.info(f"Classifying batch of {len(items.texts)} items with threshold {threshold}")
     results = embedding_service.classify_batch(items.texts, threshold)
     return ClassifyBatchResponse(results=results)
+
+@app.post("/parse_compensation", response_model=CompensationResponse)
+def parse_compensation(item: Item) -> CompensationResponse:
+    logging.info(f"Parsing compensation from item with text '{item.text}'")
+    parser = CompensationParser(model_name="microsoft/Phi-3-mini-4k-instruct")
+    return parser.parse(item.text)
+
+@app.post("/parse_compensation_batch", response_model=list[CompensationResponse])
+def parse_compensation_batch(items: Items) -> list[CompensationResponse]:
+    logging.info(f"Parsing compensation from batch of {len(items.texts)} items")
+    parser = CompensationParser(model_name="microsoft/Phi-3-mini-4k-instruct")
+    return parser.parse_batch(items.texts)
 
 # ---------------------- Main ----------------------
 if __name__ == "__main__":
