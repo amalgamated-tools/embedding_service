@@ -26,3 +26,11 @@ class ClassifyResponse(BaseModel):
     
 class ClassifyBatchResponse(BaseModel):
     results: List[ClassifyResponse]
+
+class CompensationResponse(BaseModel):
+    min_salary: float | None = None
+    max_salary: float | None = None
+    currency: str | None = None
+    currency_symbol: str | None = None
+    offers_equity: bool = False
+    text: str | None = None

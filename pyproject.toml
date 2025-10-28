@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "accelerate>=1.10.1",
     "fastapi>=0.116.1",
     "httptools>=0.6.4",
     "httpx>=0.28.1",
@@ -12,6 +13,8 @@ dependencies = [
     "pytest>=8.4.2",
     "redis>=6.4.0",
     "sentence-transformers>=5.1.0",
+    "torch>=2.8.0",
+    "transformers>=4.56.1",
     "uvicorn>=0.35.0",
     "uvloop>=0.21.0",
 ]
